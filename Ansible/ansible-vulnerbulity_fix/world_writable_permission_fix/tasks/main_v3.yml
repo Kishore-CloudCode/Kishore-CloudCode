@@ -1,0 +1,35 @@
+---
+
+  - name: Pre Checking File/Directory Permissions
+    stat: 
+      path: "{{ item }}"
+    with_items: "{{ permissions }}"
+    register: file_status 
+    ignore_errors: yes
+ 
+#  - debug: msg="{{file_status.results}}"
+  - debug: msg="{{ inventory_hostname }} - Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+    when: item.stat.exists 
+    with_items: "{{ file_status.results }}"
+
+  - name: Changing File/Directory permission 
+    file: 
+       path: "{{ item.stat.path }}"
+       mode: "o-w"
+    when: (item.stat.exists and item.stat.isreg) 
+#    when: (item.stat.exists and item.stat.isreg) or
+#          (item.stat.exists and item.stat.isdir)
+    with_items: "{{ file_status.results }}"
+
+  - name: Post Checking File/Directory Permissions
+    stat:
+       path: "{{ item }}"
+    with_items: "{{ permissions }}"
+    register: file_post_status
+    ignore_errors: yes
+
+
+  - debug: msg="{{ inventory_hostname }} -  Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+    when: item.stat.exists
+    with_items: "{{ file_post_status.results }}"
+

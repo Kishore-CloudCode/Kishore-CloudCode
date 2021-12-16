@@ -1,0 +1,6 @@
+---
+
+permissions:
+ targets:
+   path: "/etc/passwd"
+   mode: "0750"

@@ -1,0 +1,30 @@
+---
+
+  - name: Pre Checking Directory Permissions
+    stat: 
+      path: "{{ item }}"
+    with_items: "{{ permissions }}"
+    register: file_status 
+    ignore_errors: yes
+ 
+  - debug: msg="Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+    with_items: "{{ file_status.results }}"
+    ignore_errors: yes
+
+  - name: Changing Directory permission 
+    file: 
+      path: "{{ item }}"
+      state: file
+      mode: "o-w"
+    with_items: "{{ permissions }}"
+
+  - name: Pre Checking Directory Permissions
+    stat:
+      path: "{{ item }}"
+    with_items: "{{ permissions }}"
+    register: file_status
+
+
+  - debug: msg="Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+    with_items: "{{ file_status.results }}"
+

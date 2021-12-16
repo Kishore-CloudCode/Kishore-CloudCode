@@ -1,0 +1,19 @@
+---
+
+permissions:
+ - /app/SP/UnixScripts/ExternalReferences/Rollback/conf.prop
+ - /tsm/logs/dsmsched.app.log
+ - /install/kernel_749_P614_downloaded/SAP
+ - /tsm/conf/Nodes/spclicert.crl
+ - /tsm/conf/Nodes/spclicert.kdb
+ - /tsm/conf/Nodes/spclicert.rdb
+ - /tsm/conf/TSM.KDB
+ - /tsm/conf/TSM.IDX
+ - /tsm/conf/dsm.sys
+ - /tsm/conf/Nodes/spclicert.crl
+ - /tsm/conf/Nodes/spclicert.kdb
+ - /tsm/conf/Nodes/spclicert.rdb
+ - /tsm/conf/TSM.KDB
+ - /tsm/conf/TSM.IDX
+ - /usr/lib/libicuuc.so.49.1.1
+
