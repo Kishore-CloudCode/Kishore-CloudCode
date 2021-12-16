@@ -1,0 +1,74 @@
+---
+
+  - name: Date format set
+    shell: date +%d-%m-%y
+    register: Date_format 
+  
+  - name: setting variable 
+    set_fact: 
+       today_date: "{{ Date_format.stdout }}"
+
+  - name: Pre Checking Home Directory Permissions
+    stat:
+      path: "{{ item }}"
+    with_items: "{{ permissions }}"
+    register: file_status
+    ignore_errors: yes
+
+  - name: Date format set
+    shell: date +%T-%D
+    register: time_format 
+  
+  - name: setting variable 
+    set_fact: 
+       cur_time: "{{ time_format.stdout }}"
+
+
+  - name: pre change Log File update
+    shell: "echo \"#### Pre Checking Home Folder Permissions ####\" | tee -a /tmp/home_permission_fix_{{ today_date }}"
+
+  - name: saving pre_check permission
+    lineinfile:
+      path: "/tmp/home_permission_fix_{{ today_date }}"
+      line: "{{ inventory_hostname }} - Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}- {{ cur_time }}"
+      state: present
+      insertafter: EOF
+    when: (item.stat.exists and item.stat.isdir)
+    with_items: "{{ file_status.results }}"
+
+
+  - name: Changing Home Directory permission
+    file:
+       path: "{{ item.stat.path }}"
+       mode: "g-w,o-rwx"
+    when: (item.stat.exists and item.stat.isdir and item.stat.mode > '0750')
+    with_items: "{{ file_status.results }}"
+
+  - name: Post Checking Home Directory Permissions
+    stat:
+       path: "{{ item }}"
+    with_items: "{{ permissions }}"
+    register: file_post_status
+    ignore_errors: yes
+    
+
+  - name: Date format set
+    shell: date +%T-%D
+    register: time_format 
+  
+  - name: setting variable 
+    set_fact: 
+       cur_time: "{{ time_format.stdout }}"
+
+  - name: post change Log File update
+    shell: "echo \"#### Post Checking Home Folder Permissions ####\" | tee -a /tmp/home_permission_fix_{{ today_date }}"
+
+  - name: saving post_check permission
+    lineinfile:
+      path: "/tmp/home_permission_fix_{{ today_date }}"
+      line: "{{ inventory_hostname }} - Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}} - {{ cur_time }}"
+      state: present
+      insertafter: EOF
+    when: (item.stat.exists and item.stat.isdir)
+    with_items: "{{ file_post_status.results }}"
+

@@ -1,0 +1,49 @@
+---
+
+  - name: Pre Checking Home Directory Permissions
+    stat:
+      path: "{{ item }}"
+    with_items: "{{ folder_names }}"
+    register: file_status
+    ignore_errors: yes
+  
+  - name: pre_check Log File update
+    shell: "echo \"#### Pre Checking Home Folder Permissions ####\" | tee -a /tmp/home_permission_fix_{{ lookup('pipe', 'date +%d-%m-%y') }}"
+
+  - name: saving Home Folder pre_check permission
+    lineinfile:
+      path: "/tmp/home_permission_fix_{{ lookup('pipe', 'date +%d-%m-%y') }}"
+      line: "{{ inventory_hostname }} - Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}} - {{ lookup('pipe', 'date +%T-%D') }}"
+      state: present
+      insertafter: EOF
+    when: (item.stat.exists and item.stat.isdir)
+    with_items: "{{ file_status.results }}"
+
+
+  - name: Changing Home Directory permission
+    file:
+       path: "{{ item.stat.path }}"
+       mode: "g-w,o-rwx"
+    when: (item.stat.exists and item.stat.isdir)
+    with_items: "{{ file_status.results }}"
+
+  - name: Post Checking Home Directory Permissions
+    stat:
+       path: "{{ item }}"
+    with_items: "{{ folder_names }}"
+    register: file_post_status
+    ignore_errors: yes
+    
+
+  - name: post change Log File update
+    shell: "echo \"#### Post Checking Home Folder Permissions ####\" | tee -a /tmp/home_permission_fix_{{ lookup('pipe', 'date +%d-%m-%y') }}"
+
+  - name: saving post_check permission
+    lineinfile:
+      path: "/tmp/home_permission_fix_{{ lookup('pipe', 'date +%d-%m-%y') }}"
+      line: "{{ inventory_hostname }} - Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}} - {{ lookup('pipe', 'date +%T-%D') }}"
+      state: present
+      insertafter: EOF
+    when: (item.stat.exists and item.stat.isdir)
+    with_items: "{{ file_post_status.results }}"
+

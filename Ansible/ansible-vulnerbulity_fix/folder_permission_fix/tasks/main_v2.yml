@@ -1,0 +1,50 @@
+---
+
+  - name: Pre Checking Home Directory Permissions
+    stat: 
+      path: "{{ item }}"
+    with_items: "{{ permissions }}"
+    register: file_status 
+    ignore_errors: yes
+
+  - debug: msg="{{ inventory_hostname }} - Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+    when: (item.stat.exists and item.stat.mode > '0750')
+    with_items: "{{ file_status.results }}"
+
+  - name: saving pre_check permission 
+    lineinfile:
+      path: "/tmp/home_permission_fix_{{ ansible_date_time.date }}"
+      create: yes
+      line: "{{ inventory_hostname }} - Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+      state: present 
+      insertafter: EOF 
+    when: (item.stat.exists and item.stat.mode > '0750')
+    with_items: "{{ file_status.results }}"
+
+  - name: Changing Home Directory permission 
+    file: 
+       path: "{{ item.stat.path }}"
+       mode: "g-w,o-rwx"
+    when: (item.stat.exists and item.stat.mode > '0750') 
+    with_items: "{{ file_status.results }}"
+ 
+  - name: Post Checking Home Directory Permissions
+    stat:
+       path: "{{ item }}"
+#    with_items: "{{ permissions }}"
+    register: file_post_status
+    ignore_errors: yes
+    when: (item.stat.exists and item.stat.mode > '0750')
+    with_items: 
+       - "{{ permissions }}"
+       - "{{ file_status.results }}"
+ 
+ 
+  - debug: msg="{{ inventory_hostname }} - Username:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+    when: item.stat.exists
+#    with_items: "{{ file_post_status.results }}"
+    when: (item.stat.exists and item.stat.mode > '0750')
+    with_items: 
+       - "{{ permissions }}"
+       - "{{ file_status.results }}"
+
