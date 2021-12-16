@@ -1,0 +1,16 @@
+---
+  - name: This Task will Enable/Disable the service 
+    service: 
+      name: "{{ item }}"
+      state: stopped
+      enabled: no
+    with_items: "{{ service_name }}"
+
+  - name: Checking status of service 
+#    shell: /sbin/chkconfig --list "{{ item }}"
+    shell: systemctl is-enabled "{{ item }}"
+    with_items: "{{ service_name }}"
+    register: service_status
+
+  - debug: msg="{{item.stdout}}"
+    with_items: "{{ service_status.results }}"
