@@ -1,0 +1,14 @@
+---
+
+  - name: Checking file status 
+    shell: |
+      ls -ld "{{ item }}"
+      if [ $? -eq "0" ];
+      then echo 'file_present';
+      else echo 'file_notpresent';
+      fi
+    with_items: "{{ files }}"
+    register: file_status
+
+  - debug: msg="{{item}}"
+    with_items: "{{ file_status.results }}"

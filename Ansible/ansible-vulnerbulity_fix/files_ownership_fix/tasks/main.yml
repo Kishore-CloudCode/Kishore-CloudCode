@@ -1,0 +1,40 @@
+---
+
+  - name: Pre Checking File/Directory Permissions
+    stat: 
+      path: "{{ item }}"
+    with_items: "{{ files }}"
+    register: file_status 
+    ignore_errors: yes
+ 
+  - debug: msg="UID:{{item.stat.uid}} - GID:{{item.stat.gid}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+    when: item.stat.exists 
+    with_items: "{{ file_status.results }}"
+
+
+  - name: Changing Ownership of File/Directory
+    file: 
+      path: "{{ item.stat.path }}"
+      owner: root
+    when: (item.stat.exists and item.stat.pw_name is not defined)
+    with_items: "{{ file_status.results }}"
+
+  - name: Changing Group permission  of File/Directory
+    file: 
+      path: "{{ item.stat.path }}"
+      group: root
+    when: (item.stat.exists and item.stat.gr_name is not defined)
+    with_items: "{{ file_status.results }}"
+
+  - name: Post Checking File/Directory Permissions
+    stat: 
+      path: "{{ item }}"
+    with_items: "{{ files }}"
+    register: file_post_status 
+    ignore_errors: yes
+ 
+  - debug: msg="UserName:{{item.stat.pw_name}} - GroupName:{{item.stat.gr_name}} - FilePermission:{{item.stat.mode}} - FilePath:{{item.stat.path}}"
+    when: item.stat.exists
+    with_items: "{{ file_post_status.results }}"
+ 
+

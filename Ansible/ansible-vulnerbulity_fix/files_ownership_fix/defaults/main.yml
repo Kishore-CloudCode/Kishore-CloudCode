@@ -1,0 +1,7 @@
+---
+
+files: 
+
+ -  /etc/opt/ssl
+ -  /etc/passwd
+ -  /etc/snmp/snmpd.conf
